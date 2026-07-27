@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://ramen-schema.org/ora/2026.1/details.schema.json",
-  "title": "ORA Details",
+  "$id": "https://ramen-schema.org/shoyu/2026.1/details.schema.json",
+  "title": "Shoyu Details",
   "description": "Configuration for rendering entity and collection detail views.",
   "$ref": "#/$defs/detailViews",
   "$defs": {

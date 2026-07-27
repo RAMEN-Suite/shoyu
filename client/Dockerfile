@@ -1,4 +1,4 @@
-FROM node:24-alpine3.23 AS base
+FROM node:24-alpine AS base
 WORKDIR /app
 ENV NPM_CONFIG_UPDATE_NOTIFIER=false \
   NPM_CONFIG_FUND=false
@@ -9,14 +9,14 @@ RUN cp src/index.docker.html src/index.html \
   && npm ci \
   && npm run build
 
-FROM caddy:2.11.2-alpine AS runtime
+FROM caddy:2.11.4-alpine AS runtime
 WORKDIR /app
 
 RUN addgroup -S webuser \
   && adduser -S webuser -G webuser \
   && apk add --no-cache gettext-envsubst=0.24.1-r1
 
-COPY --from=build --chown=webuser:webuser /app/dist/ora/browser /usr/share/caddy
+COPY --from=build --chown=webuser:webuser /app/dist/shoyu/browser /usr/share/caddy
 
 RUN cat > /etc/caddy/Caddyfile <<'EOF'
 :8080 {
@@ -28,22 +28,22 @@ EOF
 
 COPY client/NOTICES.md .
 
-RUN cat > /usr/local/bin/ora-entrypoint <<'EOF' \
-  && chmod +x /usr/local/bin/ora-entrypoint
+RUN cat > /usr/local/bin/shoyu-entrypoint <<'EOF' \
+  && chmod +x /usr/local/bin/shoyu-entrypoint
 #!/bin/sh
 set -eu
 
-: "${ORA_CLIENT_LANG:=en}"
-: "${ORA_CLIENT_TITLE:=ORA – Graph-based Digital Edition}"
-: "${ORA_CLIENT_DESCRIPTION:=Graph-based Digital Edition.}"
-: "${ORA_CLIENT_BASE_HREF:=/}"
-: "${ORA_CLIENT_FAVICON_HREF:=/favicon.ico}"
+: "${CLIENT_LANG:=en}"
+: "${CLIENT_TITLE:=Shoyu – Graph-based Digital Edition}"
+: "${CLIENT_DESCRIPTION:=Graph-based Digital Edition.}"
+: "${CLIENT_BASE_HREF:=/}"
+: "${CLIENT_FAVICON_HREF:=/favicon.ico}"
 
 rm -rf /tmp/www
 mkdir -p /tmp/www
 cp -R /usr/share/caddy/. /tmp/www/
 
-envsubst '${ORA_CLIENT_LANG} ${ORA_CLIENT_TITLE} ${ORA_CLIENT_DESCRIPTION} ${ORA_CLIENT_BASE_HREF} ${ORA_CLIENT_FAVICON_HREF}' \
+envsubst '${CLIENT_LANG} ${CLIENT_TITLE} ${CLIENT_DESCRIPTION} ${CLIENT_BASE_HREF} ${CLIENT_FAVICON_HREF}' \
   < /usr/share/caddy/index.html \
   > /tmp/www/index.html
 
@@ -56,4 +56,4 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
   CMD wget -q -O /dev/null http://127.0.0.1:8080 || exit 1
 
-CMD ["ora-entrypoint"]
+CMD ["shoyu-entrypoint"]

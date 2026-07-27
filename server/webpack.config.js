@@ -8,7 +8,7 @@ const __dirname = path.dirname(__filename);
 
 export default {
   entry: {
-    'ora.api': './src/ora.api.ts',
+    api: './src/api.ts',
   },
 
   target: 'node',

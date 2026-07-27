@@ -7,7 +7,7 @@ import { initConfigService } from './services/ConfigService';
 import { initI18nService } from './services/I18nService';
 import { ContentService, initContentService } from './services/ContentService';
 
-const ORA_SERVER_PORT: string = process.env.ORA_SERVER_PORT ?? '3000';
+const SERVER_PORT: string = process.env.SERVER_PORT ?? '3000';
 
 await initConfigService();
 await initI18nService();
@@ -25,5 +25,5 @@ ContentService.attachContentRoutes(application, '/api/content');
 ExpressUtils.attachGenericResponses(application);
 
 application
-  .listen(ORA_SERVER_PORT, (): void => logger.info(`ORA API is listening: ${ORA_SERVER_PORT}.`))
+  .listen(SERVER_PORT, (): void => logger.info(`API is listening: ${SERVER_PORT}.`))
   .on('error', (error: Error): void => logger.error(error));
