@@ -194,11 +194,11 @@ jobs:
       matrix:
         include:
           - environment: development
-            script: deploy-ora-server
+            script: deploy-shoyu-server
           - environment: sbwi
-            script: deploy-ora-pub-server
+            script: deploy-shoyu-pub-server
           - environment: sbwi
-            script: deploy-ora-ed-server
+            script: deploy-shoyu-ed-server
     steps:
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
