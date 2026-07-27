@@ -188,6 +188,7 @@ jobs:
       contents: read # required for actions/checkout to fetch repo contents if this repo is private
       packages: read # required for docker login + docker compose pull to authenticate against and pull from the registry
     strategy:
+      fail-fast: false
       matrix:
         include:
           - environment: development
