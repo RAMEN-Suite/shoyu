@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://ramen-schema.org/ora/2026.1/site.schema.json",
-  "title": "ORA Site",
+  "$id": "https://ramen-schema.org/shoyu/2026.1/site.schema.json",
+  "title": "Shoyu Site",
   "description": "Configuration for site-level options such as language, content loading, navbar and footer.",
   "$ref": "#/$defs/siteOptions",
   "$defs": {

@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://ramen-schema.org/ora/2026.1/lists.schema.json",
-  "title": "ORA Lists",
+  "$id": "https://ramen-schema.org/shoyu/2026.1/lists.schema.json",
+  "title": "Shoyu Lists",
   "description": "Configuration for entity and collection list views, including list options, visible properties, sorting, filtering, and optional client-side value maps.",
   "$ref": "#/$defs/listViews",
   "$defs": {

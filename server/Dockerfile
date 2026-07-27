@@ -34,4 +34,4 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
   CMD wget -qO- http://127.0.0.1:${PORT}/api/health || exit 1
 
 ENTRYPOINT ["/sbin/tini", "--"]
-CMD ["node", "dist/ora.api.js"]
+CMD ["node", "dist/api.js"]

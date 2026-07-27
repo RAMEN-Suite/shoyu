@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "ora": {
+    "shoyu": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": { "type": "component", "style": "none", "skipTests": true },
@@ -22,7 +22,7 @@
         "build": {
           "builder": "@angular/build:application",
           "options": {
-            "allowedCommonJsDependencies": ["remove-accents"],
+            "allowedCommonJsDependencies": ["remove-accents", "handlebars"],
             "browser": "src/main.ts",
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
@@ -69,10 +69,10 @@
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "ora:build:production"
+              "buildTarget": "shoyu:build:production"
             },
             "development": {
-              "buildTarget": "ora:build:development"
+              "buildTarget": "shoyu:build:development"
             }
           },
           "defaultConfiguration": "development"

@@ -1,7 +1,7 @@
 {
-  "name": "ora-workspace",
-  "productName": "ORA - Graph-based Digital Edition",
-  "description": "Repo-level tooling for the ORA repository.",
+  "name": "shoyu-workspace",
+  "productName": "Shoyu - Graph-based Digital Edition",
+  "description": "Repo-level tooling for the Shoyu repository.",
   "license": "Apache-2.0",
   "private": true,
   "scripts": {

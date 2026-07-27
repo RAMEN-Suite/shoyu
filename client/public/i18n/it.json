@@ -48,10 +48,10 @@
         "copyLink": "Copia link",
         "print": "Salva PDF",
         "usage": "Nota d’uso",
-        "usageSoftware": "La presentazione avviene con *[ORA](https://ramen-schema.org)*, un software di edizione con licenza Apache 2.0."
+        "usageSoftware": "La presentazione avviene con *[Shoyu](https://ramen-schema.org)*, un software di edizione con licenza Apache 2.0."
       },
       "footer": {
-        "software": "Presentato con <b>[ORA]({{ url }})</b>."
+        "software": "Presentato con <b>[Shoyu]({{ url }})</b>."
       }
     },
     "blocks": {

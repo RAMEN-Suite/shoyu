@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://ramen-schema.org/ora/2026.1/annotations.schema.json",
-  "title": "ORA Annotations",
-  "description": "Configuration for resolving and rendering text annotations in ORA text views.",
+  "$id": "https://ramen-schema.org/shoyu/2026.1/annotations.schema.json",
+  "title": "Shoyu Annotations",
+  "description": "Configuration for resolving and rendering text annotations in Shoyu text views.",
   "type": "object",
   "additionalProperties": false,
   "required": ["definitions"],

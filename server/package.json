@@ -1,7 +1,7 @@
 {
-  "name": "ora-server",
-  "productName": "ORA - Graph-based Digital Edition Server",
-  "description": "Server application for the ORA Graph-based Digital Edition based on RAMEN Suite.",
+  "name": "shoyu-server",
+  "productName": "Shoyu - Graph-based Digital Edition Server",
+  "description": "Server application for the Shoyu Graph-based Digital Edition based on RAMEN Suite.",
   "license": "Apache-2.0",
   "version": "0.1.1",
   "author": {
@@ -15,8 +15,8 @@
     "docs:dev": "node --env-file=.env openapi/generator.js ",
     "docs:prod": "node openapi/generator.js",
     "build": "webpack",
-    "ora:dev": "tsx watch --env-file=.env src/ora.api.ts | pino-pretty",
-    "ora:prod": "node dist/ora.api.js",
+    "server:dev": "tsx watch --env-file=.env src/api.ts | pino-pretty",
+    "server:prod": "node dist/api.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --check src",
@@ -47,7 +47,7 @@
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.59.3",
     "webpack": "^5.106.2",
-    "webpack-cli": "^7.0.2",
+    "webpack-cli": "^7.2.1",
     "webpack-node-externals": "^3.0.0",
     "yaml": "^2.8.3"
   }

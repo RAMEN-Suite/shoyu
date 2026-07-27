@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://ramen-schema.org/ora/2026.1/index.schema.json",
-  "title": "ORA Indexes",
-  "description": "Configuration for reusable list indexes used by the ORA application.",
+  "$id": "https://ramen-schema.org/shoyu/2026.1/index.schema.json",
+  "title": "Shoyu Indexes",
+  "description": "Configuration for reusable list indexes used by the application.",
   "$ref": "#/$defs/indexes",
   "$defs": {
     "indexType": {

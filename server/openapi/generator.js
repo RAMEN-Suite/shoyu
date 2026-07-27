@@ -1,24 +1,24 @@
-import path from "path";
-import { fileURLToPath } from "url";
-import fs from "fs";
-import YAML from "yaml";
+import path from 'path';
+import { fileURLToPath } from 'url';
+import fs from 'fs';
+import YAML from 'yaml';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const DEFAULT_OPENAPI_VERSION = "3.0.1";
-const DEFAULT_OPENAPI_TITLE = "ORA API";
-const DEFAULT_OPENAPI_API_VERSION = "1.0.0";
-const DEFAULT_SECURITY_ENABLED = "true";
+const DEFAULT_OPENAPI_VERSION = '3.0.1';
+const DEFAULT_OPENAPI_TITLE = 'Shoyu API';
+const DEFAULT_OPENAPI_API_VERSION = '1.0.0';
+const DEFAULT_SECURITY_ENABLED = 'true';
 
 const PWD_PATH = path.join(__dirname);
-const ROOT_PATH = path.join(__dirname, "..");
-const HANDLERS_PATH = path.join(ROOT_PATH, "src", "handlers");
-const DIST_OPENAPI_PATH = path.join(PWD_PATH, "openapi.yaml");
+const ROOT_PATH = path.join(__dirname, '..');
+const HANDLERS_PATH = path.join(ROOT_PATH, 'src', 'handlers');
+const DIST_OPENAPI_PATH = path.join(PWD_PATH, 'openapi.yaml');
 
 function parseCSVList(value) {
   return value
-    .split(",")
+    .split(',')
     .map((item) => item.trim())
     .filter(Boolean);
 }
@@ -36,11 +36,11 @@ function getOpenApiApiVersion() {
 }
 
 function isSecurityEnabled() {
-  return (process.env.OPENAPI_SECURITY_ENABLED ?? DEFAULT_SECURITY_ENABLED).toLowerCase() === "true";
+  return (process.env.OPENAPI_SECURITY_ENABLED ?? DEFAULT_SECURITY_ENABLED).toLowerCase() === 'true';
 }
 
 function getServerUrls() {
-  const fallbackPort = process.env.ORA_SERVER_PORT ?? "3000";
+  const fallbackPort = process.env.SERVER_PORT ?? '3000';
   const fallbackServer = `http://localhost:${fallbackPort}`;
 
   return parseCSVList(process.env.OPENAPI_SERVERS ?? fallbackServer);
@@ -48,23 +48,23 @@ function getServerUrls() {
 
 function parseYAMLFile(filePath) {
   try {
-    const content = fs.readFileSync(filePath, "utf-8");
-    return YAML.parse(content, { logLevel: "error" });
+    const content = fs.readFileSync(filePath, 'utf-8');
+    return YAML.parse(content, { logLevel: 'error' });
   } catch (error) {
-    console.error("[ERROR]", `Error parsing YAML file ${filePath}:`, error);
+    console.error('[ERROR]', `Error parsing YAML file ${filePath}:`, error);
     throw error;
   }
 }
 
 function writeYAMLToFile(filePath, content) {
-  fs.writeFileSync(filePath, YAML.stringify(content), "utf8");
-  console.log("[SUCCESS]", `File written: ${filePath}`);
+  fs.writeFileSync(filePath, YAML.stringify(content), 'utf8');
+  console.log('[SUCCESS]', `File written: ${filePath}`);
 }
 
 function getAllYamlFiles(dir) {
   try {
     if (!fs.existsSync(dir)) {
-      console.warn("[WARN]", `Directory does not exist: ${dir}`);
+      console.warn('[WARN]', `Directory does not exist: ${dir}`);
       return [];
     }
 
@@ -77,14 +77,14 @@ function getAllYamlFiles(dir) {
 
       if (stat.isDirectory()) {
         files.push(...getAllYamlFiles(filePath));
-      } else if (filePath.endsWith(".yaml") || filePath.endsWith(".yml")) {
+      } else if (filePath.endsWith('.yaml') || filePath.endsWith('.yml')) {
         files.push(filePath);
       }
     }
 
     return files;
   } catch (error) {
-    console.error("[ERROR]", `Error reading YAML files from ${dir}:`, error);
+    console.error('[ERROR]', `Error reading YAML files from ${dir}:`, error);
     return [];
   }
 }
@@ -101,7 +101,7 @@ function processOpenAPIFiles(files) {
     const parsedContent = parseYAMLFile(file);
 
     if (!parsedContent?.openapi) {
-      console.warn("[WARN]", `Skipping non-OpenAPI file: ${file}`);
+      console.warn('[WARN]', `Skipping non-OpenAPI file: ${file}`);
       continue;
     }
 
@@ -138,8 +138,8 @@ function generateOpenAPISpec(collected, outputFile) {
       ? {
           securitySchemes: {
             basicAuth: {
-              type: "http",
-              scheme: "basic",
+              type: 'http',
+              scheme: 'basic',
             },
           },
         }
@@ -166,16 +166,16 @@ function main() {
     const filesToProcess = getAllYamlFiles(HANDLERS_PATH);
 
     if (filesToProcess.length === 0) {
-      console.warn("[WARN]", `No YAML files found in: ${HANDLERS_PATH}`);
+      console.warn('[WARN]', `No YAML files found in: ${HANDLERS_PATH}`);
     }
 
     const collected = processOpenAPIFiles(filesToProcess);
     generateOpenAPISpec(collected, DIST_OPENAPI_PATH);
 
-    console.log("[SUCCESS]", "OpenAPI definitions generated and saved.");
-    console.log("[COMPLETED]", "API documentation generated successfully.");
+    console.log('[SUCCESS]', 'OpenAPI definitions generated and saved.');
+    console.log('[COMPLETED]', 'API documentation generated successfully.');
   } catch (error) {
-    console.error("[ERROR]", "An error occurred:", error);
+    console.error('[ERROR]', 'An error occurred:', error);
     process.exitCode = 1;
   }
 }

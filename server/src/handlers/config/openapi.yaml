@@ -1,6 +1,6 @@
 openapi: 3.0.1
 info:
-  title: ORA Config API
+  title: Config API
   version: 1.0.0
 
 paths:
@@ -62,7 +62,7 @@ components:
   schemas:
     Config:
       type: object
-      description: Combined ORA configuration loaded from the configured configuration directory.
+      description: Combined configuration loaded from the configured configuration directory.
       required:
         - lists
         - details
