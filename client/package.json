@@ -3,7 +3,7 @@
   "productName": "Shoyu – Graph-based Digital Edition",
   "description": "Tool for creating graph-based digital editions based on RAMEN Suite.",
   "license": "Apache-2.0",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "author": {
     "name": "Sebastian Enns",
     "email": "sebastian.enns@mni.thm.de",
