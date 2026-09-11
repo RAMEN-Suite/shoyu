@@ -196,9 +196,9 @@ jobs:
           - environment: development
             script: deploy-shoyu-server
           - environment: sbwi
-            script: deploy-shoyu-pub-server
+            script: "deploy ed/shoyu server"
           - environment: sbwi
-            script: deploy-shoyu-ed-server
+            script: "deploy pub/shoyu server"
     steps:
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
