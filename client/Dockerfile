@@ -12,13 +12,17 @@ RUN cp src/index.docker.html src/index.html \
 FROM caddy:2.11.4-alpine AS runtime
 WORKDIR /app
 
-RUN addgroup -S webuser \
-  && adduser -S webuser -G webuser \
-  && apk add --no-cache gettext-envsubst=0.24.1-r1
+RUN addgroup -S -g 10001 webuser \
+  && adduser -S -u 10001 webuser -G webuser \
+  && apk add --no-cache gettext-envsubst=0.24.1-r1 \
+  && setcap -r /usr/bin/caddy
 
 COPY --from=build --chown=webuser:webuser /app/dist/shoyu/browser /usr/share/caddy
 
 RUN cat > /etc/caddy/Caddyfile <<'EOF'
+{
+  persist_config off
+}
 :8080 {
     root * /tmp/www
     try_files {path} {path}/ /index.html
