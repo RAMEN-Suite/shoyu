@@ -21,7 +21,8 @@ COPY --from=build --chown=webuser:webuser /app/dist/shoyu/browser /usr/share/cad
 
 RUN cat > /etc/caddy/Caddyfile <<'EOF'
 {
-  persist_config off
+    admin off
+    persist_config off
 }
 :8080 {
     root * /tmp/www
