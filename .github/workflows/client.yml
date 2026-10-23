@@ -186,17 +186,15 @@ jobs:
     environment: ${{ matrix.environment }}
     permissions:
       contents: read # required for actions/checkout to fetch repo contents if this repo is private
-      packages: read # required for docker login + docker compose pull to authenticate against and pull from the registry
+      packages: read # the token piped to the gateway logs the host in to the registry for docker compose pull
     strategy:
       fail-fast: false
       matrix:
         include:
           - environment: development
-            script: deploy-shoyu-client
-          - environment: sbwi
-            script: deploy-shoyu-pub-client
-          - environment: sbwi
-            script: deploy-shoyu-ed-client
+            stack: shoyu/shoyu
+          - environment: staging
+            stack: dev/shoyu
     steps:
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -205,7 +203,7 @@ jobs:
       - name: Install SSH Key
         env:
           KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
-          PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          PRIVATE_KEY: ${{ secrets.SSH_DEPLOY_KEY }}
           HOST: ${{ secrets.SSH_HOST }}
           USER: ${{ secrets.SSH_USER }}
         run: |
@@ -221,8 +219,8 @@ jobs:
             User $USER
             IdentityFile ~/.ssh/staging.key
           END
-      - name: Start Container
+      - name: Deploy the dev image
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SCRIPT: ${{ matrix.script }}
-        run: printf '%s' "$GH_TOKEN" | ssh staging $SCRIPT
+          STACK: ${{ matrix.stack }}
+        run: printf '%s' "$GH_TOKEN" | ssh staging deploy "$STACK" client dev
