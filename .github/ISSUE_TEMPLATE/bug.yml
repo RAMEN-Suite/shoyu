@@ -1,0 +1,31 @@
+name: Bug report
+description: Report a reproducible problem.
+labels: [bug]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Release (e.g. v0.1.2) or the image tag of the deployment, and where you saw it.
+      placeholder: 'v0.1.2 on the public edition'
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: What happened?
+      description: Describe the actual and expected behavior.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction
+      description: Clear steps, the page or API request, and the configuration involved.
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Include the browser and operating system when the client is involved.
