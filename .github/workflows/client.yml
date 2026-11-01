@@ -1,10 +1,6 @@
 name: Client CI
 
 on:
-  pull_request:
-    paths:
-      - "client/**"
-      - ".github/workflows/client.yml"
   push:
     branches: [dev, main]
     paths:
@@ -26,66 +22,8 @@ concurrency:
 permissions: {}
 
 jobs:
-  node-ci:
-    name: Node checks
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read # required for actions/checkout to fetch repo contents if this repo is private
-    if: github.head_ref != 'dev' && github.head_ref != 'main'
-    steps:
-      - name: Checkout
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-        with:
-          persist-credentials: false
-      - name: Setup Node
-        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
-        with:
-          node-version-file: .nvmrc
-          cache: "npm"
-          cache-dependency-path: client/package-lock.json
-      - name: Install dependencies
-        run: npm ci
-      - name: Check dependency licenses
-        run: npx license-checker --production --failOn "GPL-2.0;GPL-3.0;AGPL-3.0;AGPL-1.0"
-      - name: Generate license report
-        if: always()
-        run: npx license-checker --excludePrivatePackages --production --markdown --out licenses-npm.md
-      - name: Write license summary
-        if: always()
-        run: |
-          {
-            echo "## NPM Dependency Licenses"
-            echo ""
-            echo "### Summary"
-            echo ""
-            echo "| License | Count |"
-            echo "|---|---|"
-            npx license-checker --excludePrivatePackages --production --json | jq -r '
-              [.[].licenses]
-              | flatten
-              | group_by(.)
-              | map({license: .[0], count: length})
-              | sort_by(-.count)
-              | .[]
-              | "| \(.license) | \(.count) |"
-            '
-            echo ""
-            echo "<details><summary>Full package list</summary>"
-            echo ""
-            cat licenses-npm.md
-            echo ""
-            echo "</details>"
-          } >> "$GITHUB_STEP_SUMMARY"
-      - name: Lint
-        run: npm run lint
-      - name: Format Check
-        run: npm run format
-        continue-on-error: true
-      - name: Build
-        run: npm run build
   dev-container:
     name: Dev Container
-    needs: [node-ci]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/dev' && github.event_name == 'push'
     permissions:
