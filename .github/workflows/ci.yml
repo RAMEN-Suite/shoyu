@@ -1,0 +1,80 @@
+name: CI
+
+on:
+  push:
+    branches-ignore: [main, dev]
+  pull_request:
+    branches: [main, dev]
+  workflow_call:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.event_name }}-${{ github.ref_name }}
+  cancel-in-progress: true
+
+permissions: {}
+
+jobs:
+  node:
+    name: ${{ matrix.name }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Client
+            directory: client
+          - name: Server
+            directory: server
+    uses: RAMEN-Suite/ramen-workflows/.github/workflows/node-ci.yml@175bf2c7820eac7ddd6c59de31a823c8743616f7 # v0.2.4
+    with:
+      working-directory: ${{ matrix.directory }}
+      lint-scripts: lint format
+      test-scripts: '' # no tests yet
+      package-script: build
+    permissions:
+      contents: read # required for actions/checkout to fetch repo contents if this repo is private
+
+  image:
+    name: ${{ matrix.name }} image
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Client
+            directory: client
+          - name: Server
+            directory: server
+    uses: RAMEN-Suite/ramen-workflows/.github/workflows/container-check.yml@175bf2c7820eac7ddd6c59de31a823c8743616f7 # v0.2.4
+    with:
+      name: ${{ matrix.directory }}
+      dockerfile: ${{ matrix.directory }}/Dockerfile
+    permissions:
+      contents: read # required for actions/checkout to fetch repo contents if this repo is private
+      security-events: write # required for uploading the image scan to code scanning
+
+  supply-chain:
+    name: CI
+    uses: RAMEN-Suite/ramen-workflows/.github/workflows/supply-chain.yml@175bf2c7820eac7ddd6c59de31a823c8743616f7 # v0.2.4
+    with:
+      working-directories: . client server
+    permissions:
+      contents: read # required for actions/checkout to fetch repo contents if this repo is private
+
+  security:
+    name: CI
+    uses: RAMEN-Suite/ramen-workflows/.github/workflows/security.yml@175bf2c7820eac7ddd6c59de31a823c8743616f7 # v0.2.4
+    with:
+      semgrep-configs: p/security-audit p/secrets p/nodejs p/nodejsscan p/typescript
+      codeql-config-file: ./.github/codeql/codeql-config.yml
+    permissions:
+      contents: read # required for actions/checkout to fetch repo contents if this repo is private
+      security-events: write # required for uploading results to code scanning
+
+  config-lint:
+    name: Config lint
+    uses: RAMEN-Suite/ramen-workflows/.github/workflows/config-lint.yml@175bf2c7820eac7ddd6c59de31a823c8743616f7 # v0.2.4
+    with:
+      dockerfiles: client/Dockerfile server/Dockerfile
+    permissions:
+      contents: read # required for actions/checkout to fetch repo contents if this repo is private
+      security-events: write # required for uploading results to code scanning

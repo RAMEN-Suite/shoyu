@@ -2,33 +2,16 @@ name: Commitlint
 
 on:
   push:
-    branches: [dev, main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.sha }}
+  cancel-in-progress: false
 
 permissions: {}
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
-  cancel-in-progress: true
-
 jobs:
   commitlint:
-    name: Lint commits
-    runs-on: ubuntu-latest
+    name: Conventional
+    uses: RAMEN-Suite/ramen-workflows/.github/workflows/commitlint-node.yml@175bf2c7820eac7ddd6c59de31a823c8743616f7 # v0.2.4
     permissions:
-      contents: read
-    steps:
-      - name: Checkout
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-        with:
-          fetch-depth: 0
-          persist-credentials: false
-      - name: Setup Node
-        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
-        with:
-          node-version-file: .nvmrc
-          cache: npm
-          cache-dependency-path: package-lock.json
-      - name: Install tooling
-        run: npm ci
-      - name: Lint pushed commits
-        run: npx commitlint --from origin/main --to HEAD --verbose
+      contents: read # required for actions/checkout to fetch repo contents if this repo is private

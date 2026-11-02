@@ -1,321 +1,116 @@
-name: Release Workflow
+name: Release
 
 on:
   push:
-    branches:
-      - main
-
-    paths:
-      - "client/**"
-      - "server/**"
-      - "schema/**"
-      - ".github/workflows/release.yml"
+    branches: [main]
   workflow_dispatch:
     inputs:
       release_as:
-        description: "Force a specific version, e.g. 1.0.0. Leave blank for automatic bump."
-        required: false
+        description: 'Force a version X.Y.Z (default: from the conventional commits)'
         type: string
-
-env:
-  REGISTRY: ghcr.io
+      dry_run:
+        description: 'Bump and build the notes only: no push, images, deploy or back-merge'
+        type: boolean
+        default: false
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref_name }}
+  group: release
   cancel-in-progress: false
 
 permissions: {}
 
 jobs:
-  licenses:
-    name: Generate Third-Party Notices
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write # required to commit and push the generated THIRD-PARTY-NOTICES.md files back to the repo
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-        with:
-          persist-credentials: true # zizmor: ignore[artipacked] -- required for git push in a later step
-      - name: Setup node
-        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
-        with:
-          node-version: "24"
-      - name: Install server deps
-        working-directory: server
-        run: npm ci
-      - name: Install client deps
-        working-directory: client
-        run: npm ci
-      - name: Generate server notices
-        working-directory: server
-        run: npx generate-license-file --input package-lock.json --output NOTICES.md --overwrite
-      - name: Generate client notices
-        working-directory: client
-        run: npx generate-license-file --input package-lock.json --output NOTICES.md --overwrite
-      - name: Commit notices
-        run: |
-          git config user.name  "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          git add server/NOTICES.md client/NOTICES.md
-
-          if git diff --cached --quiet; then
-            echo "No changes detected."
-          else
-            git commit -m "chore: update third-party notices"
-            git push
-          fi
-
-  create-tag:
-    name: Version, Changelog and Release
-    runs-on: ubuntu-latest
-    needs: [licenses]
-    outputs:
-      version: ${{ steps.bump.outputs.version }}
-    permissions:
-      contents: write # commit CHANGELOG + version bump, push tag, create the GitHub release
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-        with:
-          ref: ${{ github.ref }}
-          fetch-depth: 0
-          persist-credentials: true # zizmor: ignore[artipacked] -- required for git push in a later step
-      - name: Setup node
-        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
-        with:
-          node-version-file: .nvmrc
-          cache: npm
-          cache-dependency-path: package-lock.json
-      - name: Install tooling
-        run: npm ci
-      - name: Configure git
-        run: |
-          git config user.name  "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-      - name: Bump version and update changelog
-        id: bump
-        env:
-          RELEASE_AS: ${{ inputs.release_as }}
-        run: |
-          if [ -n "$RELEASE_AS" ]; then
-            npx commit-and-tag-version --release-as "$RELEASE_AS"
-          else
-            npx commit-and-tag-version
-          fi
-
-          VERSION=$(node -p "require('./server/package.json').version")
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-      - name: Push commit and tag
-        env:
-          VERSION: ${{ steps.bump.outputs.version }}
-        run: |
-          git push origin "HEAD:${GITHUB_REF_NAME}"
-          git push origin "refs/tags/v$VERSION"
-      - name: Extract latest changelog section
-        run: |
-          awk '
-            /^#{2,3} \[?v?[0-9]+\.[0-9]+\.[0-9]+/ { c++; if (c==2) exit }
-            c==1 { print }
-          ' CHANGELOG.md > RELEASE_NOTES.md
-      - name: Create GitHub release
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VERSION: ${{ steps.bump.outputs.version }}
-        run: |
-          gh release create "v${VERSION}" \
-            --title "v${VERSION}" \
-            --notes-file RELEASE_NOTES.md
-  container:
-    name: Build, Check and Push Container
-    runs-on: ubuntu-latest
-    needs: [create-tag]
+  ci:
+    name: CI
+    uses: $/.github/workflows/ci.yml
     permissions:
       contents: read # required for actions/checkout to fetch repo contents if this repo is private
-      packages: write # required to push the built image to the Container registry (docker/login-action + build-push-action)
-      id-token: write # required for actions/attest to mint a Sigstore OIDC token for keyless signing
-      security-events: write # required to upload Trivy's SARIF report to the Security tab (public repos only)
-      attestations: write # required for actions/attest to persist build provenance + SBOM attestations
-      artifact-metadata: write # required for actions/attest's push-to-registry to create the artifact storage record
-    strategy:
-      matrix:
-        include:
-          - name: server
-            dockerfile: ./server/Dockerfile
-          - name: client
-            dockerfile: ./client/Dockerfile
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-        with:
-          ref: "v${{ needs.create-tag.outputs.version }}"
-          persist-credentials: false
-      - name: Setup docker
-        uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4.1.0
-      - name: Log in to the Container registry
-        uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee # v4.2.0
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Extract metadata (tags, labels) for Docker
-        id: meta
-        uses: docker/metadata-action@80c7e94dd9b9319bd5eb7a0e0fe9291e23a2a2e9 # v6.1.0
-        with:
-          images: ${{ env.REGISTRY }}/${{ github.repository }}-${{ matrix.name }}
-          tags: |
-            type=semver,pattern=v{{version}},value=v${{ needs.create-tag.outputs.version }}
-            type=semver,pattern=v{{major}}.{{minor}},value=v${{ needs.create-tag.outputs.version }}
-            type=sha,format=short
-            type=raw,value={{date 'YYYYMMDD'}}
-            type=raw,value=latest,enable=true
-      - name: Build image
-        id: build
-        uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf # v7.2.0
-        with:
-          context: .
-          file: ${{ matrix.dockerfile }}
-          pull: true
-          push: false
-          load: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+      security-events: write # required for uploading results to code scanning
 
-      - name: Generate SBOM with Syft
-        id: sbom
-        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
-        with:
-          image: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
-          format: cyclonedx-json
-          output-file: sbom-${{ matrix.name }}.cdx.json
-          upload-artifact: false
-
-      - name: Scan image with trivy
-        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
-        with:
-          image-ref: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
-          format: sarif
-          output: trivy-${{ matrix.name }}.sarif
-          severity: "CRITICAL,HIGH"
-          limit-severities-for-sarif: true
-          exit-code: "0"
-          ignore-unfixed: true
-      - name: Upload Trivy report to Github Security tab
-        if: always() && github.event.repository.visibility == 'public'
-        uses: github/codeql-action/upload-sarif@8aad20d150bbac5944a9f9d289da16a4b0d87c1e # v4.36.2
-        with:
-          sarif_file: trivy-${{ matrix.name }}.sarif
-          category: trivy-container
-
-      - name: Generate License Report
-        env:
-          IMAGE_TAG: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
-        run: |
-          curl -sSfL https://raw.githubusercontent.com/anchore/grant/v0.6.7/install.sh | sh -s -- -b /usr/local/bin
-          grant -f licenses.json list "$IMAGE_TAG"
-      - name: Check image licenses
-        run: |
-          if jq -e '[.run.targets[].evaluation.findings.packages[].licenses[]?.id // "" | select(test("AGPL"; "i"))] | length > 0' licenses.json > /dev/null; then
-            echo "::error::AGPL-licensed package found"
-            jq -r '.run.targets[].evaluation.findings.packages[] | select(.licenses[]?.id // "" | test("AGPL"; "i")) | "\(.name) \(.version)"' licenses.json
-            exit 1
-          fi
-          echo "No AGPL licenses found."
-      - name: Write license summary
-        if: always()
-        run: |
-          {
-            echo "## License Report"
-            echo ""
-            echo "| License | Packages | Risk |"
-            echo "|---|---|---|"
-            jq -r '
-              [.run.targets[].evaluation.findings.packages[].licenses[]? | select(.id != null)]
-              | group_by(.id)
-              | map({license: .[0].id, count: length, risk: (.[0].riskCategory // "Unknown")})
-              | sort_by(-.count)
-              | .[]
-              | "| \(.license) | \(.count) | \(.risk) |"
-            ' licenses.json
-          } >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Push image to registry
-        id: push
-        env:
-          IMAGE_TAG: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
-          TAGS: ${{ steps.meta.outputs.tags }}
-        run: |
-          while IFS= read -r tag; do
-            [ -z "$tag" ] && continue
-            docker push "${tag}"
-          done <<< "$TAGS"
-
-          pushed_digest=$(docker inspect --format='{{index .RepoDigests 0}}' "$IMAGE_TAG" | cut -d'@' -f2)
-          echo "digest=$pushed_digest" >> "$GITHUB_OUTPUT"
-      - name: Attest build provenance
-        uses: actions/attest@59d89421af93a897026c735860bf21b6eb4f7b26 # v4.1.0
-        if: github.event.repository.visibility == 'public'
-        with:
-          subject-name: ${{ env.REGISTRY }}/${{ github.repository }}-${{ matrix.name }}
-          subject-digest: ${{ steps.push.outputs.digest }}
-          push-to-registry: true
-      - name: Attest SBOM
-        uses: actions/attest@59d89421af93a897026c735860bf21b6eb4f7b26 # v4.1.0
-        if: github.event.repository.visibility == 'public'
-        with:
-          subject-name: ${{ env.REGISTRY }}/${{ github.repository }}-${{ matrix.name }}
-          subject-digest: ${{ steps.push.outputs.digest }}
-          sbom: sbom-${{ matrix.name }}.cdx.json
-          push-to-registry: true
-      - name: Upload SBOM and scan report as artifacts
-        if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: build-${{ matrix.name }}-artifacts
-          path: |
-            sbom-${{ matrix.name }}.cdx.json
-            trivy-${{ matrix.name }}.sarif
-          retention-days: 120
-  deploy:
-    name: deploy
-    runs-on: ubuntu-latest
-    environment: ${{ matrix.environment }}
-    needs: [create-tag, container]
+  release:
+    name: Release
+    needs: [ci]
+    uses: RAMEN-Suite/ramen-workflows/.github/workflows/release-hosted.yml@175bf2c7820eac7ddd6c59de31a823c8743616f7 # v0.2.4
+    with:
+      notices: client server
+      release-as: ${{ inputs.release_as }}
+      dry-run: ${{ inputs.dry_run == true }}
+    secrets:
+      RELEASE_APP_PRIVATE_KEY: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
     permissions:
-      packages: read # the token piped to the gateway logs the host in to the registry for docker compose pull
+      contents: read # checkout; the push and the release go through the release App token
+
+  client-image:
+    name: Client image
+    needs: [release]
+    if: ${{ inputs.dry_run != true }}
+    uses: RAMEN-Suite/ramen-workflows/.github/workflows/container-publish.yml@175bf2c7820eac7ddd6c59de31a823c8743616f7 # v0.2.4
+    with:
+      name: client
+      dockerfile: client/Dockerfile
+      ref: v${{ needs.release.outputs.version }}
+      tags: |
+        type=semver,pattern=v{{version}},value=v${{ needs.release.outputs.version }}
+        type=semver,pattern=v{{major}}.{{minor}},value=v${{ needs.release.outputs.version }}
+        type=sha,format=short
+        type=raw,value=latest
+    permissions:
+      contents: read # required for actions/checkout to fetch repo contents if this repo is private
+      packages: write # push the image and its attestations
+      id-token: write # required to sign the attestations
+      attestations: write # required to persist the attestations
+      security-events: write # required for uploading the image scan to code scanning
+      artifact-metadata: write # actions/attest records the pushed image as an artifact of the repository
+
+  server-image:
+    name: Server image
+    needs: [release]
+    if: ${{ inputs.dry_run != true }}
+    uses: RAMEN-Suite/ramen-workflows/.github/workflows/container-publish.yml@175bf2c7820eac7ddd6c59de31a823c8743616f7 # v0.2.4
+    with:
+      name: server
+      dockerfile: server/Dockerfile
+      ref: v${{ needs.release.outputs.version }}
+      tags: |
+        type=semver,pattern=v{{version}},value=v${{ needs.release.outputs.version }}
+        type=semver,pattern=v{{major}}.{{minor}},value=v${{ needs.release.outputs.version }}
+        type=sha,format=short
+        type=raw,value=latest
+    permissions:
+      contents: read # required for actions/checkout to fetch repo contents if this repo is private
+      packages: write # push the image and its attestations
+      id-token: write # required to sign the attestations
+      attestations: write # required to persist the attestations
+      security-events: write # required for uploading the image scan to code scanning
+      artifact-metadata: write # actions/attest records the pushed image as an artifact of the repository
+
+  production:
+    name: Production
+    needs: [release, client-image, server-image]
     strategy:
       fail-fast: false
       matrix:
-        environment: [riserver, sbwi, antjebrons]
-    steps:
-      - name: Install SSH Key
-        env:
-          KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
-          PRIVATE_KEY: ${{ secrets.SSH_DEPLOY_KEY }}
-          HOST: ${{ secrets.SSH_HOST }}
-          USER: ${{ secrets.SSH_USER }}
-        run: |
-          mkdir -p ~/.ssh
-          chmod 700 ~/.ssh
-          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
-          chmod 600 ~/.ssh/known_hosts
-          printf '%s\n' "$PRIVATE_KEY" > ~/.ssh/staging.key
-          chmod 600 ~/.ssh/staging.key
-          cat >>~/.ssh/config <<END
-          Host staging
-            HostName $HOST
-            User $USER
-            IdentityFile ~/.ssh/staging.key
-          END
-      - name: Deploy the release
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VERSION: v${{ needs.create-tag.outputs.version }}
-        run: |
-          printf '%s' "$GH_TOKEN" | ssh staging deploy ed/shoyu server "$VERSION"
-          printf '%s' "$GH_TOKEN" | ssh staging deploy ed/shoyu client "$VERSION"
-          printf '%s' "$GH_TOKEN" | ssh staging deploy pub/shoyu server "$VERSION"
-          printf '%s' "$GH_TOKEN" | ssh staging deploy pub/shoyu client "$VERSION"
+        environment: ${{ fromJSON(vars.DEPLOY_PRODUCTION) }}
+    uses: RAMEN-Suite/ramen-workflows/.github/workflows/deploy-ssh.yml@175bf2c7820eac7ddd6c59de31a823c8743616f7 # v0.2.4
+    with:
+      environment: ${{ matrix.environment }}
+      images: >-
+        {"server": "v${{ needs.release.outputs.version }}@${{ needs.server-image.outputs.digest }}",
+         "client": "v${{ needs.release.outputs.version }}@${{ needs.client-image.outputs.digest }}"}
+    secrets:
+      SSH_HOST: ${{ secrets.SSH_HOST }}
+      SSH_USER: ${{ secrets.SSH_USER }}
+      SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+      SSH_DEPLOY_KEY: ${{ secrets.SSH_DEPLOY_KEY }}
+    permissions:
+      packages: read # the token piped to the gateway lets the host pull the images
+
+  back-merge:
+    name: Back-merge
+    needs: [release]
+    if: ${{ inputs.dry_run != true }}
+    uses: RAMEN-Suite/ramen-workflows/.github/workflows/back-merge.yml@175bf2c7820eac7ddd6c59de31a823c8743616f7 # v0.2.4
+    secrets:
+      RELEASE_APP_PRIVATE_KEY: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+    permissions:
+      contents: read # checkout; the push goes through the release App token

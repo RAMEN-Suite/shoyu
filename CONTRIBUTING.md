@@ -1,165 +1,137 @@
-# Contributing to ORA
+# Contributing to Shoyu
 
-Thanks for contributing! Here are the important things to know:
+## Start the repository
 
-- [How you contribute](#how-you-contribute)
-- [Branching strategy](#branching-strategy)
-- [Pull request titles](#pull-request-titles)
-- [Passing CI](#passing-ci)
-- [Merging](#merging)
-- [How releases work](#how-releases-work)
-- [Maintainers: commit schema & local hooks](#maintainers-commit-schema--local-hooks)
+Shoyu has two packages with their own dependencies: `client/` (Angular) and `server/` (Express API on Neo4j). Install the Node.js version from `.nvmrc`, then set up the repository root once:
 
----
+```bash
+nvm install
+npm ci            # commitlint for the commit-msg hook
+npm run prepare   # activates .githooks; .npmrc disables install scripts, so npm does not run it for you
+```
 
-## How you contribute
+Clones that used the old husky hook must run `npm run prepare` once as well: their `core.hooksPath` still points at `.husky/_`, which no longer exists, so no hook runs.
 
-You work on a **feature branch** and open a **pull request into `dev`**. You don't push to `dev` or `main` directly (those branches are restricted to maintainers). Because your feature branch is squashed when it merges, the individual commit messages on it don't need to follow any convention. So you can write them however helps you. Only the **PR title** has to be right.
+The server needs a Neo4j 5 database with APOC and a project. Both come from [ramen-projects](https://github.com/RAMEN-Suite/ramen-projects); clone it next to this repository.
 
-Node is pinned via `.nvmrc`; run `nvm use` to match the version CI uses, then install dependencies in the package you're working on (`client/` or `server/`).
+Load a project with its import scripts in `imports/<project>/`, in file order, from the repository root. Then set up the server. The project's configuration lives in `projects/<project>/shoyu/`, in the directories `config`, `i18n`, `markdown` and `assets`:
 
----
+```bash
+cd server
+npm ci
+cp .env.example .env
+```
 
-## Branching strategy
+In `server/.env`, point the database settings at the local database and the four paths (relative to `server/`) at the project you imported:
+
+```bash
+NEO4J_HOST="bolt://localhost:7687"
+NEO4J_PASSWORD="<password>"
+CONFIGURATION_PATH="../../ramen-projects/projects/abbw/shoyu/config"
+LANGUAGES_PATH="../../ramen-projects/projects/abbw/shoyu/i18n"
+MARKDOWN_PATH="../../ramen-projects/projects/abbw/shoyu/markdown"
+ASSETS_PATH="../../ramen-projects/projects/abbw/shoyu/assets"
+```
+
+`.env` files stay local. Start the server:
+
+```bash
+npm run server:dev     # http://localhost:3000, restarts on changes
+```
+
+Start the client in a second terminal:
+
+```bash
+cd client
+npm ci
+npm start              # http://localhost:4200; requests to /api go to the server on port 3000
+```
+
+| Directory | Contents                                                                       |
+| --------- | ------------------------------------------------------------------------------ |
+| `client/` | Angular application; its image serves the build with Caddy                     |
+| `server/` | Express API, OpenAPI generator in `server/openapi/`; its image runs on Node.js |
+| `schema/` | JSON schemas of the project configuration, shipped in the server image         |
+
+## Branches and commits
 
 ```
 feature branch  ──►  dev  ──►  main
 ```
 
-| Branch | Purpose |
-| --- | --- |
-| **feature branch** | Where you work. Branched off `dev`, one per unit of work. Name it after the change, e.g. `feat/graph-zoom` or `fix/empty-result-crash`. |
-| **`dev`** | Integration branch. Contributions land here first, via squash-merged pull requests. |
-| **`main`** | Release branch. Maintainers promote `dev` into `main`, which produces a versioned, tagged release. |
+| Branch             | Purpose                                                                                                                                                                                                 |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **feature branch** | Where you work. Branched from the latest `dev`, one per change, named after it (`feat/graph-zoom`, `fix/empty-result`).                                                                                 |
+| **`dev`**          | Integration branch. Pull requests are squash-merged into it.                                                                                                                                            |
+| **`main`**         | Release branch. Maintainers promote `dev` with a merge commit, which releases. Urgent fixes may open a pull request into `main` directly; after every push to `main`, `main` is merged back into `dev`. |
 
----
-
-## Pull request titles
-
-**A pull request into `dev` must have a title that follows [Conventional Commits](https://www.conventionalcommits.org/).** A CI check validates it, and a non-conforming title blocks the merge. This is enforced because the title becomes the squashed commit message on `dev` and is read by our release tooling.
-
-The format is:
+You don't push to `dev` or `main` directly. Write [Conventional Commits](https://www.conventionalcommits.org), on your branch and in the pull request title:
 
 ```
 type(scope): subject
-```
 
-Examples of good titles:
-
-```
 feat(client): add graph zoom controls
-fix(server): handle empty Neo4j result set
+fix(server): handle an empty Neo4j result
 docs: expand the local setup instructions
 ```
 
-### Types
+| Type                                    | Use for                                                   | In the changelog |
+| --------------------------------------- | --------------------------------------------------------- | ---------------- |
+| `feat`                                  | A new feature                                             | Yes              |
+| `fix`, `perf`                           | A bug fix, a performance improvement                      | Yes              |
+| `refactor`, `docs`, `revert`            | Restructuring, documentation, reverting an earlier change | Yes              |
+| `build`, `ci`, `chore`, `style`, `test` | Build and Dockerfiles, CI, maintenance, formatting, tests | No               |
 
-| Type | Use for |
-| --- | --- |
-| `feat` | A new feature |
-| `fix` | A bug fix |
-| `perf` | A performance improvement |
-| `refactor` | A change that neither fixes a bug nor adds a feature |
-| `revert` | Reverting a previous change |
-| `docs` | Documentation only |
-| `style` | Formatting / whitespace, no behavior change |
-| `test` | Adding or fixing tests |
-| `build` | Build system or Dockerfiles |
-| `ci` | CI/CD configuration |
-| `chore` | Maintenance, tooling, dependency bumps |
+The scope is optional and one of `client`, `server`, `deps`, `release`; leave it out for repository-wide changes. Mark a breaking change with `!` after the type or scope: `feat(server)!: require authentication on all endpoints`.
 
-The type also drives the next version number: `feat` triggers a minor release, everything else a patch. You don't need to think about versions — just pick the type that honestly describes the change.
+The pull request title becomes the commit on `dev` and the line in the changelog, so make it say what changed. CI lints the title and the commits you push; the commit-msg hook checks them locally. If you are unsure about type or scope, open the pull request anyway and ask.
 
-### Scopes
+## Checks
 
-The scope (optional) names the area you touched. Allowed scopes:
+Run these in the package you changed before you push:
 
-`client` · `server` · `deps` · `release`
+| Command          | Checks                                  |
+| ---------------- | --------------------------------------- |
+| `npm run lint`   | ESLint / `ng lint`                      |
+| `npm run format` | Prettier (`npm run format:fix` repairs) |
+| `npm run build`  | The package compiles                    |
 
-Include one when it clarifies *where* the change lives (`fix(server): …`); omit it for repo-wide changes (`docs: …`).
+Every pull request into `dev` or `main` runs the full suite for both packages and both images, whatever you changed:
 
-### Breaking changes
+| Check                            | Fails on                                                                 |
+| -------------------------------- | ------------------------------------------------------------------------ |
+| PR title                         | A title that is not a Conventional Commit                                |
+| Client / Server: lint and format | Lint errors, unformatted files                                           |
+| Client / Server: package checks  | A failing `npm run build`                                                |
+| Client / Server image            | A failing image build, AGPL licenses in the image                        |
+| Supply chain                     | Invalid npm registry signatures, copyleft production dependencies        |
+| Vulnerability and secret scan    | Committed secrets (gitleaks); dependency CVEs are reported, not blocking |
+| SAST scan, CodeQL                | High-severity findings                                                   |
+| Config lint                      | Dockerfile findings (hadolint), misconfigurations (Trivy)                |
+| Actions lint                     | Workflow findings (zizmor, actionlint)                                   |
 
-Because a PR title is a single line, signal a breaking change with a `!` after the type/scope:
+Never commit secrets or `.env` files: the secret scan blocks the pull request, and a leaked secret has to be rotated.
 
-```
-feat(server)!: require authentication on all endpoints
-```
+## Dependencies
 
----
+Renovate opens dependency updates against `dev`, on branches named `deps/…`. Patch updates merge themselves once CI is green; minor and major updates arrive as pull requests. On `main` Renovate only proposes security fixes, as pull requests. The Node.js version in `.nvmrc` and in the Dockerfiles moves as one update. Do not open Dependabot security update PRs from the alerts page.
 
-## Passing CI
+`.npmrc` in the root, `client/` and `server/` disables install scripts, blocks git and remote dependencies, and sets a three-day release cooldown: a version published less than three days ago cannot enter a lockfile.
 
-When you open a pull request into `dev`, a set of automated checks runs — all of them must pass to merge. Run them locally first; it's faster than round-tripping through CI.
+Production dependencies must be permissively licensed: CI rejects copyleft licenses (GPL, LGPL, AGPL) in the npm dependencies, and AGPL anywhere in the image (the Alpine base brings GPL system packages, which is fine). Base images are pinned by tag and digest. Alpine packages are pinned by version with a `# renovate:` comment naming the Alpine release of the base image; keep that comment in step when the base image moves to a new Alpine release.
 
-### Run these before you push
+## Releases and deployments
 
-From the package you changed (`client/` or `server/`):
+Merging `dev` into `main` releases automatically: the workflow takes the version from the commits since the last release, updates `CHANGELOG.md`, tags `vX.Y.Z`, builds and publishes the client and server images, and deploys them to the production servers. While Shoyu is below `1.0.0`, a breaking change bumps the minor version and every other change the patch version; from `1.0.0` on, breaking changes bump the major and `feat` the minor version.
 
-```bash
-npm run lint         # must pass — blocks the merge
-npm run build        # must pass — blocks the merge
-npm run format       # must pass — blocks the merge
-npm run format:fix   # auto-fix formatting, then re-run the check
-```
+Every push to `dev` builds images tagged `dev` and `sha-<commit>` and deploys them for testing. A deployment waits until the containers are healthy and rolls back otherwise.
 
-Only the package you touched is checked: a change under `client/` runs Client CI; a change under `server/` or `schema/` runs Server CI.
+## Review checklist
 
-### What runs on your PR
+- Explain the problem and the resulting behavior.
+- Call out configuration, schema, API, dependency and deployment changes.
+- Include screenshots when the client changes visibly.
+- Keep unrelated refactors out of the change.
+- Do not commit build output, generated reports or local configuration.
 
-| Check | Blocks merge? | Verifies |
-| --- | --- | --- |
-| PR title | yes | Conventional Commits format |
-| Lint (`npm run lint`) | yes | ESLint / `ng lint` is clean |
-| Build (`npm run build`) | yes | The package compiles |
-| Dependency licenses | yes | No copyleft (GPL / AGPL) production dependencies |
-| Secret scan (gitleaks) | yes | No secrets or keys committed |
-| SAST (Semgrep) | yes | No high-severity security findings |
-| Dockerfile lint (hadolint) | yes | Dockerfile best practices — relevant only if you touch a `Dockerfile` |
-| Format (`npm run format`) | yes | Prettier formatting |
-| Vulnerability scan (Trivy) | yes | Dependency / filesystem CVEs (CRITICAL / HIGH / MEDIUM) |
-
-### Two things to check before you add a dependency or commit
-
-**Dependencies must be permissively licensed.** CI rejects copyleft licenses (GPL, AGPL) in production dependencies — both in the npm tree and in the built container image. Before adding a dependency, check its license; if it's GPL/AGPL, find an alternative or raise it in the pull request.
-
-**Never commit secrets.** API keys, tokens, private keys, or `.env` contents will be caught by the secret scanner and block your PR — and a leaked secret then has to be rotated. Keep them in environment variables or GitHub Secrets.
-
----
-
-## Merging
-
-You don't choose how your PR merges, the correct method is enforced per branch, and you'll be offered the right button:
-
-| Merge | Method |
-| --- | --- |
-| your feature → `dev` | **Squash and merge** (your PR title becomes the commit) |
-| `dev` → `main` | **Merge commit** — maintainers only |
-
-For your part, all you do is open the PR with a good title and let a maintainer squash it in.
-
----
-
-## How releases work
-
-Releases are automatic. When maintainers merge `dev` into `main`, a workflow reads every merged commit since the last release, determines the next version, regenerates `CHANGELOG.md`, tags the release, and publishes it — all from the commit messages, which is to say **from your PR titles.** A clear `fix(server): prevent crash on empty result` becomes a clear changelog line; a vague `fix: stuff` becomes a vague one. That's the whole reason the title check exists.
-
-If you're unsure how to type or scope your change, open the PR anyway and ask — a maintainer will help adjust the title before merge.
-
----
-
-## Maintainers: commit schema & local hooks
-
-> **This section is only relevant if you have direct push access to `dev` or `main`.** Regular contributors work entirely through pull requests and can ignore everything below — your feature-branch commits are squashed, so they're never checked.
-
-Maintainers who commit directly to `dev` or `main` bypass the squash step, which means those commit messages land in the project and the changelog as-is. They therefore **must** follow the same Conventional Commits schema described above (same types, scopes, and `!`/`BREAKING CHANGE:` for breaking changes).
-
-To catch mistakes locally, the repo ships a [husky](https://typicode.github.io/husky/) `commit-msg` hook. Activate it once, from the repository root:
-
-```bash
-npm install
-```
-
-The hook validates messages **only when you commit on `dev` or `main`** — it's deliberately skipped on feature branches, since those get squashed. It's a convenience, not a gate: it only helps people who actually commit on those branches, and it can be bypassed with `--no-verify`. The authoritative, non-bypassable checks live in CI.
-
-> **Note on versioning while below `1.0.0`.** The project is in the `0.x` range. Following the semver `^0.x` convention, breaking changes bump the **minor** version (e.g. `0.3.0 → 0.4.0`) rather than the major, until `1.0.0` is cut deliberately.
+Contributions are licensed under the repository's [Apache License 2.0](LICENSE).
