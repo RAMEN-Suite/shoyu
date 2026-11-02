@@ -26,13 +26,13 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
       - name: Lint Client Dockerfile
-        uses: hadolint/hadolint-action@2332a7b74a6de0dda2e2221d575162eba76ba5e5 # v3.3.0
+        uses: hadolint/hadolint-action@06be81baf89a55ffd0e24b8f04a4185738dd3387 # v3.5.0
         with:
           dockerfile: client/Dockerfile
           config: .hadolint.yml
           format: tty
       - name: Lint Server Dockerfile
-        uses: hadolint/hadolint-action@2332a7b74a6de0dda2e2221d575162eba76ba5e5 # v3.3.0
+        uses: hadolint/hadolint-action@06be81baf89a55ffd0e24b8f04a4185738dd3387 # v3.5.0
         with:
           dockerfile: server/Dockerfile
           config: .hadolint.yml
@@ -61,7 +61,7 @@ jobs:
           output: trivy-results.sarif
       - name: Upload trivy report to security tab
         if: always() && github.event.repository.visibility == 'public' && (github.base_ref == 'dev' || github.base_ref == 'main' || github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/main')
-        uses: github/codeql-action/upload-sarif@8aad20d150bbac5944a9f9d289da16a4b0d87c1e # v4.36.2
+        uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
         with:
           sarif_file: trivy-results.sarif
       - name: Run gitleaks (docker)
@@ -82,7 +82,7 @@ jobs:
           retention-days: 30
       - name: Upload gitleaks report to security tab
         if: always() && github.event.repository.visibility == 'public' && (github.base_ref == 'dev' || github.base_ref == 'main' || github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/main')
-        uses: github/codeql-action/upload-sarif@8aad20d150bbac5944a9f9d289da16a4b0d87c1e # v4.36.2
+        uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
         with:
           sarif_file: gitleaks.sarif
       - name: "Write step summary from SARIF"
@@ -185,7 +185,7 @@ jobs:
           fi
       - name: Upload Semgrep results to Github Security tab
         if: always() && github.event.repository.visibility == 'public' && (github.base_ref == 'dev' || github.base_ref == 'main' || github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/main')
-        uses: github/codeql-action/upload-sarif@8aad20d150bbac5944a9f9d289da16a4b0d87c1e # v4.36.2
+        uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
         with:
           sarif_file: semgrep.sarif
           category: sast

@@ -38,7 +38,7 @@ jobs:
         with:
           persist-credentials: true # zizmor: ignore[artipacked] -- required for git push in a later step
       - name: Setup node
-        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version: "24"
       - name: Install server deps
@@ -83,7 +83,7 @@ jobs:
           fetch-depth: 0
           persist-credentials: true # zizmor: ignore[artipacked] -- required for git push in a later step
       - name: Setup node
-        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
         with:
           node-version-file: .nvmrc
           cache: npm
@@ -152,16 +152,16 @@ jobs:
           ref: "v${{ needs.create-tag.outputs.version }}"
           persist-credentials: false
       - name: Setup docker
-        uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4.1.0
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
       - name: Log in to the Container registry
-        uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee # v4.2.0
+        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Extract metadata (tags, labels) for Docker
         id: meta
-        uses: docker/metadata-action@80c7e94dd9b9319bd5eb7a0e0fe9291e23a2a2e9 # v6.1.0
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
         with:
           images: ${{ env.REGISTRY }}/${{ github.repository }}-${{ matrix.name }}
           tags: |
@@ -172,7 +172,7 @@ jobs:
             type=raw,value=latest,enable=true
       - name: Build image
         id: build
-        uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf # v7.2.0
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: .
           file: ${{ matrix.dockerfile }}
@@ -205,7 +205,7 @@ jobs:
           ignore-unfixed: true
       - name: Upload Trivy report to Github Security tab
         if: always() && github.event.repository.visibility == 'public'
-        uses: github/codeql-action/upload-sarif@8aad20d150bbac5944a9f9d289da16a4b0d87c1e # v4.36.2
+        uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
         with:
           sarif_file: trivy-${{ matrix.name }}.sarif
           category: trivy-container
@@ -256,14 +256,14 @@ jobs:
           pushed_digest=$(docker inspect --format='{{index .RepoDigests 0}}' "$IMAGE_TAG" | cut -d'@' -f2)
           echo "digest=$pushed_digest" >> "$GITHUB_OUTPUT"
       - name: Attest build provenance
-        uses: actions/attest@59d89421af93a897026c735860bf21b6eb4f7b26 # v4.1.0
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
         if: github.event.repository.visibility == 'public'
         with:
           subject-name: ${{ env.REGISTRY }}/${{ github.repository }}-${{ matrix.name }}
           subject-digest: ${{ steps.push.outputs.digest }}
           push-to-registry: true
       - name: Attest SBOM
-        uses: actions/attest@59d89421af93a897026c735860bf21b6eb4f7b26 # v4.1.0
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
         if: github.event.repository.visibility == 'public'
         with:
           subject-name: ${{ env.REGISTRY }}/${{ github.repository }}-${{ matrix.name }}
