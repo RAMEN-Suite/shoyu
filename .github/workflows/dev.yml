@@ -21,7 +21,7 @@ jobs:
   client-image:
     name: Client image
     needs: [ci]
-    uses: RAMEN-Suite/ramen-workflows/.github/workflows/container-publish.yml@87aa0a65d3291204cd60dae10e8b8773ca12da1b # v0.2.5
+    uses: RAMEN-Suite/ramen-workflows/.github/workflows/container-publish.yml@3fef79e03598b698818270ed2eec99af952971f6 # v0.2.6
     with:
       name: client
       dockerfile: client/Dockerfile
@@ -39,7 +39,7 @@ jobs:
   server-image:
     name: Server image
     needs: [ci]
-    uses: RAMEN-Suite/ramen-workflows/.github/workflows/container-publish.yml@87aa0a65d3291204cd60dae10e8b8773ca12da1b # v0.2.5
+    uses: RAMEN-Suite/ramen-workflows/.github/workflows/container-publish.yml@3fef79e03598b698818270ed2eec99af952971f6 # v0.2.6
     with:
       name: server
       dockerfile: server/Dockerfile
@@ -57,7 +57,7 @@ jobs:
   development:
     name: Development
     needs: [client-image, server-image]
-    uses: RAMEN-Suite/ramen-workflows/.github/workflows/deploy-ssh.yml@87aa0a65d3291204cd60dae10e8b8773ca12da1b # v0.2.5
+    uses: RAMEN-Suite/ramen-workflows/.github/workflows/deploy-ssh.yml@3fef79e03598b698818270ed2eec99af952971f6 # v0.2.6
     with:
       environment: development
       images: >-

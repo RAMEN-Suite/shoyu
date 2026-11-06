@@ -16,7 +16,7 @@ permissions: {}
 jobs:
   staging:
     name: Staging
-    uses: RAMEN-Suite/ramen-workflows/.github/workflows/promote.yml@87aa0a65d3291204cd60dae10e8b8773ca12da1b # v0.2.5
+    uses: RAMEN-Suite/ramen-workflows/.github/workflows/promote.yml@3fef79e03598b698818270ed2eec99af952971f6 # v0.2.6
     with:
       services: server client
       sha: ${{ inputs.sha }}

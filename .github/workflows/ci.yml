@@ -25,7 +25,7 @@ jobs:
             directory: client
           - name: Server
             directory: server
-    uses: RAMEN-Suite/ramen-workflows/.github/workflows/node-ci.yml@87aa0a65d3291204cd60dae10e8b8773ca12da1b # v0.2.5
+    uses: RAMEN-Suite/ramen-workflows/.github/workflows/node-ci.yml@3fef79e03598b698818270ed2eec99af952971f6 # v0.2.6
     with:
       working-directory: ${{ matrix.directory }}
       lint-scripts: lint format
@@ -44,7 +44,7 @@ jobs:
             directory: client
           - name: Server
             directory: server
-    uses: RAMEN-Suite/ramen-workflows/.github/workflows/container-check.yml@87aa0a65d3291204cd60dae10e8b8773ca12da1b # v0.2.5
+    uses: RAMEN-Suite/ramen-workflows/.github/workflows/container-check.yml@3fef79e03598b698818270ed2eec99af952971f6 # v0.2.6
     with:
       name: ${{ matrix.directory }}
       dockerfile: ${{ matrix.directory }}/Dockerfile
@@ -54,7 +54,7 @@ jobs:
 
   supply-chain:
     name: CI
-    uses: RAMEN-Suite/ramen-workflows/.github/workflows/supply-chain.yml@87aa0a65d3291204cd60dae10e8b8773ca12da1b # v0.2.5
+    uses: RAMEN-Suite/ramen-workflows/.github/workflows/supply-chain.yml@3fef79e03598b698818270ed2eec99af952971f6 # v0.2.6
     with:
       working-directories: . client server
     permissions:
@@ -62,7 +62,7 @@ jobs:
 
   security:
     name: CI
-    uses: RAMEN-Suite/ramen-workflows/.github/workflows/security.yml@87aa0a65d3291204cd60dae10e8b8773ca12da1b # v0.2.5
+    uses: RAMEN-Suite/ramen-workflows/.github/workflows/security.yml@3fef79e03598b698818270ed2eec99af952971f6 # v0.2.6
     with:
       semgrep-configs: p/security-audit p/secrets p/nodejs p/nodejsscan p/typescript
       codeql-config-file: ./.github/codeql/codeql-config.yml
@@ -72,7 +72,7 @@ jobs:
 
   config-lint:
     name: Config lint
-    uses: RAMEN-Suite/ramen-workflows/.github/workflows/config-lint.yml@87aa0a65d3291204cd60dae10e8b8773ca12da1b # v0.2.5
+    uses: RAMEN-Suite/ramen-workflows/.github/workflows/config-lint.yml@3fef79e03598b698818270ed2eec99af952971f6 # v0.2.6
     with:
       dockerfiles: client/Dockerfile server/Dockerfile
     permissions:
