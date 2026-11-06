@@ -33,6 +33,7 @@ RUN cat > /etc/caddy/Caddyfile <<'EOF'
 }
 :8080 {
     root * /usr/share/caddy
+    encode gzip
     try_files {path} {path}/ /index.html
     # Only the static index.html from this image. Template functions can read the environment and files: never
     # enable them for proxied or user-supplied content, and keep secrets out of this container's environment.
