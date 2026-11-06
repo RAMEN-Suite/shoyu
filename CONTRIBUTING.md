@@ -118,7 +118,7 @@ Renovate opens dependency updates against `dev`, on branches named `deps/…`. P
 
 `.npmrc` in the root, `client/` and `server/` disables install scripts, blocks git and remote dependencies, and sets a three-day release cooldown: a version published less than three days ago cannot enter a lockfile.
 
-Production dependencies must be permissively licensed: CI rejects copyleft licenses (GPL, LGPL, AGPL) in the npm dependencies, and AGPL anywhere in the image (the Alpine base brings GPL system packages, which is fine). Base images are pinned by tag and digest. Alpine packages are pinned by version with a `# renovate:` comment naming the Alpine release of the base image; keep that comment in step when the base image moves to a new Alpine release.
+Production dependencies must be permissively licensed: CI rejects copyleft licenses (GPL, LGPL, AGPL) in the npm dependencies, and AGPL anywhere in the image (the Alpine base brings GPL system packages, which is fine). Base images are pinned by tag and digest. Alpine packages are pinned by version (`apk add pkg=version`) and move together with the base image.
 
 ## Releases and deployments
 
