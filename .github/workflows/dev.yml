@@ -1,0 +1,72 @@
+name: Dev
+
+on:
+  push:
+    branches: [dev]
+
+concurrency:
+  group: dev
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  ci:
+    name: CI
+    uses: $/.github/workflows/ci.yml
+    permissions:
+      contents: read # required for actions/checkout to fetch repo contents if this repo is private
+      security-events: write # required for uploading results to code scanning
+
+  client-image:
+    name: Client image
+    needs: [ci]
+    uses: RAMEN-Suite/ramen-workflows/.github/workflows/container-publish.yml@cbbaea105a016f3fca8adca1e5af11313b790f05 # v0.2.8
+    with:
+      name: client
+      dockerfile: client/Dockerfile
+      tags: |
+        type=raw,value=dev
+        type=sha,format=short
+    permissions:
+      contents: read # required for actions/checkout to fetch repo contents if this repo is private
+      packages: write # push the image and its attestations
+      id-token: write # required to sign the attestations
+      attestations: write # required to persist the attestations
+      security-events: write # required for uploading the image scan to code scanning
+      artifact-metadata: write # actions/attest records the pushed image as an artifact of the repository
+
+  server-image:
+    name: Server image
+    needs: [ci]
+    uses: RAMEN-Suite/ramen-workflows/.github/workflows/container-publish.yml@cbbaea105a016f3fca8adca1e5af11313b790f05 # v0.2.8
+    with:
+      name: server
+      dockerfile: server/Dockerfile
+      tags: |
+        type=raw,value=dev
+        type=sha,format=short
+    permissions:
+      contents: read # required for actions/checkout to fetch repo contents if this repo is private
+      packages: write # push the image and its attestations
+      id-token: write # required to sign the attestations
+      attestations: write # required to persist the attestations
+      security-events: write # required for uploading the image scan to code scanning
+      artifact-metadata: write # actions/attest records the pushed image as an artifact of the repository
+
+  development:
+    name: Development
+    needs: [client-image, server-image]
+    uses: RAMEN-Suite/ramen-workflows/.github/workflows/deploy-ssh.yml@cbbaea105a016f3fca8adca1e5af11313b790f05 # v0.2.8
+    with:
+      environment: development
+      images: >-
+        {"server": "${{ needs.server-image.outputs.sha-tag }}@${{ needs.server-image.outputs.digest }}",
+         "client": "${{ needs.client-image.outputs.sha-tag }}@${{ needs.client-image.outputs.digest }}"}
+    secrets:
+      SSH_HOST: ${{ secrets.SSH_HOST }}
+      SSH_USER: ${{ secrets.SSH_USER }}
+      SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+      SSH_DEPLOY_KEY: ${{ secrets.SSH_DEPLOY_KEY }}
+    permissions:
+      packages: read # the token piped to the gateway lets the host pull the images

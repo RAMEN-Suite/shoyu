@@ -1,0 +1,30 @@
+name: Staging
+
+on:
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: 'Commit to deploy (default: the dev HEAD)'
+        type: string
+
+concurrency:
+  group: staging
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  staging:
+    name: Staging
+    uses: RAMEN-Suite/ramen-workflows/.github/workflows/promote.yml@cbbaea105a016f3fca8adca1e5af11313b790f05 # v0.2.8
+    with:
+      services: server client
+      sha: ${{ inputs.sha }}
+    secrets:
+      SSH_HOST: ${{ secrets.SSH_HOST }}
+      SSH_USER: ${{ secrets.SSH_USER }}
+      SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+      SSH_DEPLOY_KEY: ${{ secrets.SSH_DEPLOY_KEY }}
+    permissions:
+      packages: read # read and pull the images
+      attestations: read # verify the images
