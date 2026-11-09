@@ -6,7 +6,7 @@ import { defineConfig } from "eslint/config";
 
 export default defineConfig(
   {
-    ignores: [".angular/**", ".nx/**", "dist/**", "coverage/**", "node_modules/**", "**/*.js"],
+    ignores: [".angular/**", ".nx/**", "dist/**", "coverage/**", "node_modules/**", "**/*.js", "src/index.docker.html"],
   },
 
   {

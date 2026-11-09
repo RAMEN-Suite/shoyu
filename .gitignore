@@ -60,3 +60,14 @@ i18n/*
 !i18n/.gitkeep
 
 build
+
+# SCAN RESULTS WHEN RUNNING TRIVY, GITLEAKS OR SEMGREP LOCALLY
+*.sarif
+
+# MORE SYSTEM AND ENVIRONMENT FILES
+._*
+.Spotlight-V100
+.Trashes
+desktop.ini
+.env.*
+!.env.example

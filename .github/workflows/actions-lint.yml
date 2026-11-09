@@ -1,0 +1,22 @@
+name: Actions lint
+
+on:
+  push:
+    branches: [main, dev, 'deps/**']
+  pull_request:
+    branches: [main, dev]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_name }}
+  cancel-in-progress: true
+
+permissions: {}
+
+jobs:
+  actions-lint:
+    name: Actions lint
+    uses: RAMEN-Suite/ramen-workflows/.github/workflows/actions-lint.yml@bf7ce40db2970dfc8cf349ca84d3fd924e779c4d # v0.2.10
+    permissions:
+      security-events: write # required for uploading zizmor results to code scanning
+      contents: read # required for actions/checkout to fetch repo contents if this repo is private
+      actions: read # required for upload-sarif to read workflow run info in private repos

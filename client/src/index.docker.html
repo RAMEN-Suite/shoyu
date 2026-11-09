@@ -1,12 +1,12 @@
 <!doctype html>
-<html lang="${CLIENT_LANG}">
+<html lang="{{env `CLIENT_LANG` | default `en` | html}}">
   <head>
     <meta charset="utf-8" />
-    <title>${CLIENT_TITLE}</title>
-    <base href="${CLIENT_BASE_HREF}" />
+    <title>{{env `CLIENT_TITLE` | default `Shoyu – Graph-based Digital Edition` | html}}</title>
+    <base href="{{env `CLIENT_BASE_HREF` | default `/` | html}}" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="${CLIENT_DESCRIPTION}" />
-    <link rel="icon" href="${CLIENT_FAVICON_HREF}" sizes="any" />
+    <meta name="description" content="{{env `CLIENT_DESCRIPTION` | default `Graph-based Digital Edition.` | html}}" />
+    <link rel="icon" href="{{env `CLIENT_FAVICON_HREF` | default `/favicon.ico` | html}}" sizes="any" />
   </head>
   <body>
     <root></root>
