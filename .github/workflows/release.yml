@@ -30,7 +30,7 @@ jobs:
   release:
     name: Release
     needs: [ci]
-    uses: RAMEN-Suite/ramen-workflows/.github/workflows/release-hosted.yml@4c5a73211c21748e0ba7f044b706c70551c0f6bb # v0.2.9
+    uses: RAMEN-Suite/ramen-workflows/.github/workflows/release-hosted.yml@bf7ce40db2970dfc8cf349ca84d3fd924e779c4d # v0.2.10
     with:
       notices: client server
       release-as: ${{ inputs.release_as }}
@@ -44,7 +44,7 @@ jobs:
     name: Client image
     needs: [release]
     if: ${{ inputs.dry_run != true }}
-    uses: RAMEN-Suite/ramen-workflows/.github/workflows/container-publish.yml@4c5a73211c21748e0ba7f044b706c70551c0f6bb # v0.2.9
+    uses: RAMEN-Suite/ramen-workflows/.github/workflows/container-publish.yml@bf7ce40db2970dfc8cf349ca84d3fd924e779c4d # v0.2.10
     with:
       name: client
       dockerfile: client/Dockerfile
@@ -66,7 +66,7 @@ jobs:
     name: Server image
     needs: [release]
     if: ${{ inputs.dry_run != true }}
-    uses: RAMEN-Suite/ramen-workflows/.github/workflows/container-publish.yml@4c5a73211c21748e0ba7f044b706c70551c0f6bb # v0.2.9
+    uses: RAMEN-Suite/ramen-workflows/.github/workflows/container-publish.yml@bf7ce40db2970dfc8cf349ca84d3fd924e779c4d # v0.2.10
     with:
       name: server
       dockerfile: server/Dockerfile
@@ -91,7 +91,7 @@ jobs:
       fail-fast: false
       matrix:
         environment: ${{ fromJSON(vars.DEPLOY_PRODUCTION) }}
-    uses: RAMEN-Suite/ramen-workflows/.github/workflows/deploy-ssh.yml@4c5a73211c21748e0ba7f044b706c70551c0f6bb # v0.2.9
+    uses: RAMEN-Suite/ramen-workflows/.github/workflows/deploy-ssh.yml@bf7ce40db2970dfc8cf349ca84d3fd924e779c4d # v0.2.10
     with:
       environment: ${{ matrix.environment }}
       images: >-
@@ -109,7 +109,7 @@ jobs:
     name: Back-merge
     needs: [release]
     if: ${{ inputs.dry_run != true }}
-    uses: RAMEN-Suite/ramen-workflows/.github/workflows/back-merge.yml@4c5a73211c21748e0ba7f044b706c70551c0f6bb # v0.2.9
+    uses: RAMEN-Suite/ramen-workflows/.github/workflows/back-merge.yml@bf7ce40db2970dfc8cf349ca84d3fd924e779c4d # v0.2.10
     secrets:
       RELEASE_APP_PRIVATE_KEY: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
     permissions:
