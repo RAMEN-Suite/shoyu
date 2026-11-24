@@ -55,6 +55,8 @@ export interface AttributesNodeItem extends AttributesBaseItem {
   value: Binding;
   property: string;
   isLinked?: boolean;
+  /** HTTP(S) URL property on the same node as the display value. Takes precedence over isLinked. */
+  externalLinkProperty?: string;
 }
 
 export interface CitationProps {

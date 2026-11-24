@@ -16,6 +16,7 @@ interface Attribute {
 interface AttributeValue {
   value: string;
   href?: string[];
+  externalHref?: string;
   isTranslatable?: boolean;
 }
 
@@ -71,17 +72,30 @@ export class AttributesBlock extends AbstractBlock<AttributesProps> {
 
   private resolveNodeValue(node: Node, item: AttributesNodeItem): AttributeValue {
     const value: string = ParseUtils.parseString(node[item.property]) ?? '';
+    if (item.externalLinkProperty !== undefined) {
+      return { value, externalHref: this.resolveExternalHref(node[item.externalLinkProperty]) };
+    }
     const href: string[] | undefined = item.isLinked ? this.resolveHref(node) : undefined;
     return { value, href };
+  }
+
+  private resolveExternalHref(value: unknown): string | undefined {
+    if (typeof value !== 'string' || !value.trim()) return undefined;
+    try {
+      const url: URL = new URL(value.trim());
+      return url.protocol === 'http:' || url.protocol === 'https:' ? url.href : undefined;
+    } catch {
+      return undefined;
+    }
   }
 
   private resolveEmptyValue(item: AttributesItem): AttributeValue {
     return { value: item.emptyLabel ?? this.EMPTY_LABEL, isTranslatable: true };
   }
 
-  private resolveHref(node: Node): string[] {
+  private resolveHref(node: Node): string[] | undefined {
     const uuid: string | undefined = ParseUtils.parseString(node['uuid']);
-    if (!uuid) return [];
+    if (!uuid) return undefined;
 
     if (node._labels.includes('Collection')) return this.navigationService.collectionLink(uuid);
     if (node._labels.includes('Entity')) return this.navigationService.entityLink(uuid);
