@@ -20,7 +20,7 @@
             <div class="flex min-w-0 flex-col gap-1">
               @for (entry of attribute.values; track $index) {
                 @if (entry.externalHref) {
-                  <a [href]="entry.externalHref" class="underline underline-offset-2">
+                  <a [href]="entry.externalHref" target="_blank" rel="noopener noreferrer" class="underline underline-offset-2">
                     {{ entry.value }}
                   </a>
                 } @else if (entry.href) {
