@@ -102,20 +102,16 @@ export class CollectionsScreen extends AbstractListScreen {
     const sort: Option | undefined = this.getInitialSortOption(option);
     this.activeSort.set(sort);
 
-    this.queryOptions.update(
-      (current: QueryOptions): QueryOptions => ({
-        ...current,
-        orderBy: sort?.value ?? 'label',
-        asc: option.sort?.direction === 'asc',
-      }),
-    );
+    this.queryOptions.update((current: QueryOptions): QueryOptions => ({
+      ...current,
+      orderBy: sort?.value ?? 'label',
+      asc: option.sort?.direction === 'asc',
+    }));
 
-    this.facetOptions.update(
-      (current: FacetOptions): FacetOptions => ({
-        ...current,
-        facets: this.filterPaths(option),
-      }),
-    );
+    this.facetOptions.update((current: FacetOptions): FacetOptions => ({
+      ...current,
+      facets: this.filterPaths(option),
+    }));
   }
 
   protected handlePaginationChange(change: Partial<Pick<QueryOptions, 'limit' | 'skip'>>): void {
@@ -183,25 +179,21 @@ export class CollectionsScreen extends AbstractListScreen {
     const search: string | undefined = ParseUtils.parseString(params['search']);
     const sort: Pick<QueryOptions, 'orderBy' | 'asc'> = this.applySortParams(params);
 
-    this.queryOptions.update(
-      (current: QueryOptions): QueryOptions => ({
-        ...current,
-        limit,
-        skip,
-        search,
-        filters: this.activeFilters(),
-        ...sort,
-      }),
-    );
+    this.queryOptions.update((current: QueryOptions): QueryOptions => ({
+      ...current,
+      limit,
+      skip,
+      search,
+      filters: this.activeFilters(),
+      ...sort,
+    }));
 
-    this.facetOptions.update(
-      (current: FacetOptions): FacetOptions => ({
-        ...current,
-        search,
-        filters: this.activeFilters(),
-        facets: this.filterPaths(this.activeOption()),
-      }),
-    );
+    this.facetOptions.update((current: FacetOptions): FacetOptions => ({
+      ...current,
+      search,
+      filters: this.activeFilters(),
+      facets: this.filterPaths(this.activeOption()),
+    }));
   }
 
   private applyActiveOptionParam(params: Params): void {

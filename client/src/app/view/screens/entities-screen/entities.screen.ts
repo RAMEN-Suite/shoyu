@@ -64,8 +64,8 @@ export class EntitiesScreen extends AbstractListScreen<EntityListOption> {
   protected readonly indexOptions: Signal<SearchableOption[]> = computed((): SearchableOption[] =>
     this.activeListIndex().options(this.entityLabels()),
   );
-  protected readonly activeListIndex: Signal<ListIndex> = computed(
-    (): ListIndex => this.listIndexService.getIndex(this.activeOption()?.index),
+  protected readonly activeListIndex: Signal<ListIndex> = computed((): ListIndex =>
+    this.listIndexService.getIndex(this.activeOption()?.index),
   );
   protected readonly activeIndexLabel: Signal<string> = computed((): string => {
     if (this.searchPhrase()) return this.searchPhrase();

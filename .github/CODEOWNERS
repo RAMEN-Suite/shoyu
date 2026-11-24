@@ -1,0 +1,19 @@
+* @sebenns
+
+/.githooks/ @ramondevprivate
+/.github/actionlint.yaml @ramondevprivate
+/.github/renovate.json @ramondevprivate
+/.github/codeql/ @ramondevprivate
+/.github/workflows/ @ramondevprivate
+/.npmrc @ramondevprivate
+/client/.npmrc @ramondevprivate
+/server/.npmrc @ramondevprivate
+/.versionrc.json @ramondevprivate
+/commitlint.config.js @ramondevprivate
+/.hadolint.yml @ramondevprivate
+/.gitleaks.toml @ramondevprivate
+/.dockerignore @ramondevprivate
+/client/Dockerfile @ramondevprivate
+/server/Dockerfile @ramondevprivate
+
+/SECURITY.md @sebenns

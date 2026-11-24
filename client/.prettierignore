@@ -1,0 +1,2 @@
+# Caddy template (Go template syntax), not Angular: Prettier's angular parser would rewrite the {{env `X`}} calls
+src/index.docker.html

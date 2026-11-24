@@ -200,6 +200,11 @@
         "isLinked": {
           "type": "boolean",
           "description": "Whether rendered node values should link to their detail pages."
+        },
+        "externalLinkProperty": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Property containing an absolute HTTP(S) URL on the same referenced node as the display value. Takes precedence over isLinked; missing or invalid URLs render as plain text."
         }
       }
     },

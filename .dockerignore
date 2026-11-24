@@ -1,7 +1,11 @@
-node_modules
-dist
-*.log
+# Patterns are relative to the build context (the repository root): ** also excludes client/ and server/ copies.
+**/node_modules
+**/dist
+**/*.log
 .git
-.env
-dockerfile
-build
+**/.env
+**/.env.*
+!**/.env.example
+**/build
+**/.angular
+**/coverage
