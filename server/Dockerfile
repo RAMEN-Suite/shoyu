@@ -1,4 +1,4 @@
-FROM node:24.22.2-alpine@sha256:8a32c8cf649a49915a66e81e7a609223c708d0adabf288ee3f4077d765542f85 AS base
+FROM node:24.22.3-alpine@sha256:116b800c3754b440ee0aa3ed2f20f5bf3d99a554bfd9adeea09ea8017f6e85f5 AS base
 WORKDIR /app
 ENV NPM_CONFIG_UPDATE_NOTIFIER=false \
   NPM_CONFIG_FUND=false
@@ -12,7 +12,7 @@ FROM base AS build
 COPY server .
 RUN npm ci && npm run build
 
-FROM node:24.22.2-alpine@sha256:8a32c8cf649a49915a66e81e7a609223c708d0adabf288ee3f4077d765542f85 AS runtime
+FROM node:24.22.3-alpine@sha256:116b800c3754b440ee0aa3ed2f20f5bf3d99a554bfd9adeea09ea8017f6e85f5 AS runtime
 WORKDIR /app
 ENV NODE_ENV=production \
   PORT=3000
